@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CommentDTO } from '../DTO/request.dto/CommentDTO';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { UsersService } from 'src/users/users.service';
-import { PostsService } from 'src/posts/posts.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
+import { PostsService } from '../posts/posts.service';
 @Injectable()
 export class CommentsService {
   constructor(
@@ -11,22 +11,20 @@ export class CommentsService {
     private userService: UsersService,
   ) {}
 
-  async findOne(postTitle: string, comment: string) {
+  async findOne(postID: string,  id: string) {
 
-    const post = await this.postService.findOne(postTitle);
     const com = await this.prismaService.comment.findFirst({
-      where: { content: comment, postId: post.id },
+      where: { id: id, postId: postID },
     });
 
     return com;
   }
 
 
-  async leaveComment(userId: string, body: CommentDTO) {
-    const post = await this.postService.findOne(body.title);
+  async create(userId: string, postID: string, body: CommentDTO) {
     await this.prismaService.comment.create({
       data: {
-        post: { connect: { id: post.id } },
+        post: { connect: { id: postID } },
         content: body.comment,
         author: {
           connect: { id: userId },
@@ -35,24 +33,18 @@ export class CommentsService {
     });
   }
 
-  async EditComment(userId: string, body) {
-    const comment = await this.findOne(body.title, body.comment);
+  async edit(id: string, postID: string,  body) {
     
     return this.prismaService.comment.update({
-      where: { id: comment.id },
+      where: { id: id },
       data: { content: body.changes },
     });
   }
 
-  async deleteComment(userID, body) {
-    const post = await this.userService.findOne(body.title);
-
-    const comment = await this.prismaService.comment.findFirst({
-      where: { content: body.comment, postId: post.id },
-    });
+  async delete(id: string) {
 
     return this.prismaService.comment.delete({
-      where: { id: comment.id },
+      where: { id: id },
     });
   }
 }

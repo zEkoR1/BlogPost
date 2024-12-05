@@ -6,46 +6,54 @@ import {
   Patch,
   Post,
   Query,
+  BadRequestException,
   Request,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { JwtAuthGuard } from 'src/auth/Guards/jwt-auth.guard';
-import { CreatePostDTO } from 'src/DTO/request.dto/CreatePostDTO';
-import { EditPostDTO } from 'src/DTO/request.dto/EditPostDTO';
-import { UsersService } from 'src/users/users.service';
-import { IsAuthorGuard } from 'src/auth/Guards/is-author.guard';
+import { JwtAuthGuard } from '../auth/Guards/jwt-auth.guard';
+import { CreatePostDTO } from '../DTO/request.dto/CreatePostDTO';
+import { EditPostDTO } from '../DTO/request.dto/EditPostDTO';
+import { IsAuthorGuard } from '../auth/Guards/is-author.guard';
 @Controller('posts')
 export class PostsController {
-  constructor(
-    private postService: PostsService,
-  ) {}
+  constructor(private postService: PostsService) {}
 
+  @Get('/:id')
+  getPost(@Param('id') id: string) {
+    console.log(`Received ID: ${id}`);
+    return this.postService.findOne(id);
+  }
+  
+  // @UseGuards(JwtAuthGuard)
+  // @Get('/posts')
+  // async getPosts(@Query('filter')filter?: string) {
+  //   let parsedFilter: { username?: string; tags?: string[] } = {};
+
+  //   if (filter) {
+  //     try {
+  //       parsedFilter = JSON.parse(filter);
+  //     } catch (error) {
+  //       throw new BadRequestException('Invalid filter format');
+  //     }
+  //   }
+
+  //   const { username, tags } = parsedFilter;
+  //   return this.postService.findAll(username, tags);
+  // }
   @UseGuards(JwtAuthGuard)
   @Get('/')
-  async getAllPosts(
+  async getPosts(
     @Query('username') username?: string,
-    @Query('tags') tags?: string | string[],  ) {
-      if (typeof tags === 'string') {
-        tags = tags.split(',').map(tag => tag.trim());  
-      }
+    @Query('tags') tags?: string, 
+  ) {
+    const tagsArray = tags?.split(',').map(tag => tag.trim());
 
-    return this.postService.findAll(username, tags);
+    return this.postService.findAll(username, tagsArray);
   }
-
-  @UseGuards(JwtAuthGuard, IsAuthorGuard)
-  @Get('/my')
-  getMyPosts(@Request() req) {
-    const userId = req.user.id;
-
-    return this.postService.findMy(userId);
-  }
-
-  @Get('/get')
-  getPost(title: string) {
-
-    return this.postService.findOne(title);
-  }
+  
+ 
 
   @UseGuards(JwtAuthGuard)
   @Post('/create')
@@ -56,21 +64,16 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard, IsAuthorGuard)
-  @Patch('/edit')
-  async editPost(@Request() req, @Body() body: EditPostDTO) {
-    const userId = req.user.id;
-    console.log(userId);
-
-    return this.postService.editPost(userId, body);
+  @Patch('/:id')
+  async edit(@Body() body: EditPostDTO, @Param('id') id: string) {
+    console.log(`Received ID: ${id}`);
+    return this.postService.edit(id, body);
   }
 
   @UseGuards(JwtAuthGuard, IsAuthorGuard)
-  @Delete('/delete')
-  deletePost(@Request() req, @Body() body: { title: string }) {
-    const userId = req.user.id;
+  @Delete('/:id')
+  deletePost(@Param('id') id: string) {
 
-    return this.postService.delete(userId, body.title);
+    return this.postService.delete(id);
   }
-
-
 }

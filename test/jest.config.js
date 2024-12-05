@@ -6,11 +6,12 @@ module.exports = {
   testEnvironment: 'node',
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
-  testRegex: '.*\\.spec\\.ts$', // Looks for test files ending in `.spec.ts`
+  testRegex: '.*\\.spec\\.ts$',
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
-    prefix: '<rootDir>/',
+    prefix: '<rootDir>/src/',
   }),
-  collectCoverageFrom: ['src/**/*.(t|j)s'], // Adjust based on your source directory
+  collectCoverageFrom: ['src/**/*.(t|j)s'],
   coverageDirectory: './coverage',
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'], // Ignore compiled and external files
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 };
+

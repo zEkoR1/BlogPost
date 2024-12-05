@@ -1,22 +1,24 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { CreatePostDTO } from 'src/DTO/request.dto/CreatePostDTO';
-import { EditPostDTO } from 'src/DTO/request.dto/EditPostDTO';
-import { isAuthorDTO } from 'src/DTO/request.dto/IsAuthorDTO';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { TagsService } from 'src/tags/tags.service';
-import { UsersService } from 'src/users/users.service';
+import { CreatePostDTO } from '../DTO/request.dto/CreatePostDTO';
+import { EditPostDTO } from '../DTO/request.dto/EditPostDTO';
+import { validate as isUUID } from 'uuid';
+import { PrismaService } from '../prisma/prisma.service';
+import { TagsService } from '../tags/tags.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     private prisma: PrismaService,
     private userService: UsersService,
-    private tagService : TagsService
+    private tagService: TagsService,
   ) {}
 
-  async findOne(title: string) {
-    const post = this.prisma.post.findFirst({
-      where: { title: title },
+  async findOne(id: string) {
+    if (!isUUID(id)) {
+      throw new BadRequestException('Invalid UUID format');
+    }    const post = await this.prisma.post.findUnique({
+      where: { id: id },
     });
     if (!post) throw new BadRequestException('There is no post found');
 
@@ -24,7 +26,6 @@ export class PostsService {
   }
 
   async findAll(username?: string, tags?: string[]) {
-
     let userID;
     if (username) {
       const user = await this.userService.findOne(username);
@@ -44,7 +45,7 @@ export class PostsService {
       };
     }
 
-    return  this.prisma.post.findMany({
+    return this.prisma.post.findMany({
       where,
       include: {
         author: true,
@@ -54,12 +55,11 @@ export class PostsService {
   }
 
   async create(userId: string, body: CreatePostDTO) {
-
     const { title, content, tags } = body;
     if (!body.title || !body.content) {
       throw new BadRequestException('Title and content are required');
     }
-    const createdTags = await this.tagService.create({tags})
+    const createdTags = await this.tagService.create({ tags });
 
     return this.prisma.post.create({
       data: {
@@ -68,8 +68,8 @@ export class PostsService {
         author: {
           connect: { id: userId },
         },
-        tags: { 
-          connect: createdTags.map( (tag) => ({id: tag.id}))
+        tags: {
+          connect: createdTags.map((tag) => ({ id: tag.id })),
         },
       },
       include: {
@@ -78,22 +78,8 @@ export class PostsService {
     });
   }
 
-  async findMy(userId: string) {
-
-    const posts = await this.prisma.post.findMany({
-      where: { authorId: userId },
-    });
-    if (!posts)
-      throw new BadRequestException('This user doesnt have any posts yet');
-
-    return posts;
-  }
-
-  async editPost(userId: string, body: EditPostDTO) {
-
-    const post = await this.findOne(body.title);
+  async edit(id: string, body: EditPostDTO) {
     const { tags } = body;
-
     const newData: {
       title?: string;
       content?: string;
@@ -112,16 +98,14 @@ export class PostsService {
     }
 
     return this.prisma.post.update({
-      where: { id: post.id },
+      where: { id: id },
       data: newData,
     });
   }
 
-  async delete(userId: string, title: string) {
-
-    const post = await this.findOne(title);
+  async delete(id: string) {
     const deletedPost = await this.prisma.post.delete({
-      where: { id: post.id },
+      where: { id: id },
     });
 
     return {
@@ -131,7 +115,6 @@ export class PostsService {
   }
 
   async filterByTags(body: { tag: string }) {
-
     const posts = await this.prisma.post.findMany({
       select: {
         title: true,
@@ -154,7 +137,7 @@ export class PostsService {
 
     if (!posts.length)
       throw new BadRequestException('There is no any post with this Tag');
-    
+
     return posts;
   }
 }

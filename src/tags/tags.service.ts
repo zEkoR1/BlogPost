@@ -6,17 +6,20 @@ export class TagsService {
   constructor(private prismaService: PrismaService) {}
 
   async find(body: {tags: string[]}) {
+
     const tags = await this.prismaService.tag.findMany({
       where: {name : 
         {in : body.tags}
       }
     })
     console.log(tags)
+
     return tags;
     
   }
 
   async create(body: {tags: string[] }) {
+
     const tagPromises  =  body.tags.map((tag) => {
       return this.prismaService.tag.upsert({
         where: {name:tag},
@@ -25,6 +28,7 @@ export class TagsService {
       })
     });
     const tags = await Promise.all(tagPromises)
+    
     return tags
     }
 }

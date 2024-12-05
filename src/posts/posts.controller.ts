@@ -21,7 +21,7 @@ export class PostsController {
     private postService: PostsService,
   ) {}
 
-  //   @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('/')
   async getAllPosts(
     @Query('username') username?: string,
@@ -29,6 +29,7 @@ export class PostsController {
       if (typeof tags === 'string') {
         tags = tags.split(',').map(tag => tag.trim());  
       }
+
     return this.postService.findAll(username, tags);
   }
 
@@ -36,24 +37,27 @@ export class PostsController {
   @Get('/my')
   getMyPosts(@Request() req) {
     const userId = req.user.id;
+
     return this.postService.findMy(userId);
   }
 
   @Get('/get')
   getPost(title: string) {
+
     return this.postService.findOne(title);
   }
+
   @UseGuards(JwtAuthGuard)
   @Post('/create')
   async postCreate(@Request() req, @Body() body: CreatePostDTO) {
     const userId = req.user.id;
-    // console.log(userId);
+
     return this.postService.create(userId, body);
   }
+
   @UseGuards(JwtAuthGuard, IsAuthorGuard)
   @Patch('/edit')
   async editPost(@Request() req, @Body() body: EditPostDTO) {
-    // console.log(postId)
     const userId = req.user.id;
     console.log(userId);
 
@@ -64,14 +68,9 @@ export class PostsController {
   @Delete('/delete')
   deletePost(@Request() req, @Body() body: { title: string }) {
     const userId = req.user.id;
+
     return this.postService.delete(userId, body.title);
   }
-  // @UseGuards(JwtAuthGuard)
-  @Get('/filter')
-  filterPosts(@Body() body: { tag: string }) {
-    return this.postService.filterByTags(body);
-  }
-  // @UseGuards(JwtAuthGuard)
-  // @Patch('/edit/tag')
-  // editTag (@Request() req, body) {}
+
+
 }

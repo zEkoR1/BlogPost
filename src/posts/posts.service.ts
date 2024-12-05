@@ -13,15 +13,18 @@ export class PostsService {
     private userService: UsersService,
     private tagService : TagsService
   ) {}
+
   async findOne(title: string) {
     const post = this.prisma.post.findFirst({
       where: { title: title },
     });
     if (!post) throw new BadRequestException('There is no post found');
+
     return post;
   }
 
   async findAll(username?: string, tags?: string[]) {
+
     let userID;
     if (username) {
       const user = await this.userService.findOne(username);
@@ -29,7 +32,6 @@ export class PostsService {
         userID = user.id;
       }
     }
-    // console.log(userID, tags )
     const where: any = {};
     if (userID) where.authorId = userID;
     if (tags && tags.length > 0) {
@@ -41,6 +43,7 @@ export class PostsService {
         },
       };
     }
+
     return  this.prisma.post.findMany({
       where,
       include: {
@@ -49,13 +52,15 @@ export class PostsService {
       },
     });
   }
+
   async create(userId: string, body: CreatePostDTO) {
+
     const { title, content, tags } = body;
     if (!body.title || !body.content) {
       throw new BadRequestException('Title and content are required');
     }
     const createdTags = await this.tagService.create({tags})
-    //  console.log(title, content)
+
     return this.prisma.post.create({
       data: {
         title,
@@ -63,12 +68,6 @@ export class PostsService {
         author: {
           connect: { id: userId },
         },
-        // tags: {
-        //   connectOrCreate: tags.map((tag) => ({
-        //     where: { name: tag },
-        //     create: { name: tag },
-        //   })),
-        // },
         tags: { 
           connect: createdTags.map( (tag) => ({id: tag.id}))
         },
@@ -78,15 +77,20 @@ export class PostsService {
       },
     });
   }
+
   async findMy(userId: string) {
+
     const posts = await this.prisma.post.findMany({
       where: { authorId: userId },
     });
     if (!posts)
       throw new BadRequestException('This user doesnt have any posts yet');
+
     return posts;
   }
+
   async editPost(userId: string, body: EditPostDTO) {
+
     const post = await this.findOne(body.title);
     const { tags } = body;
 
@@ -112,14 +116,14 @@ export class PostsService {
       data: newData,
     });
   }
+
   async delete(userId: string, title: string) {
+
     const post = await this.findOne(title);
-
-    // this.userService.isAuthor(userId, post.authorId);
-
     const deletedPost = await this.prisma.post.delete({
       where: { id: post.id },
     });
+
     return {
       message: 'Post was successfuly deleted ',
       deletedPost,
@@ -127,6 +131,7 @@ export class PostsService {
   }
 
   async filterByTags(body: { tag: string }) {
+
     const posts = await this.prisma.post.findMany({
       select: {
         title: true,
@@ -149,7 +154,7 @@ export class PostsService {
 
     if (!posts.length)
       throw new BadRequestException('There is no any post with this Tag');
-    // console.log(posts);
+    
     return posts;
   }
 }

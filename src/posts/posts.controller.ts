@@ -10,50 +10,30 @@ import {
   Request,
   Param,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { JwtAuthGuard } from '../auth/Guards/jwt-auth.guard';
-import { CreatePostDTO } from '../DTO/request.dto/CreatePostDTO';
-import { EditPostDTO } from '../DTO/request.dto/EditPostDTO';
-import { IsAuthorGuard } from '../auth/Guards/is-author.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreatePostDTO } from './create-post.dto';
+import { EditPostDTO } from './edit-post.dto';
+import { IsAuthorGuard } from '../auth/guards/is-author.guard';
+import { FilterPostQueryDTO } from './filter-post.dto';
+import { UuidValidationPipe } from '../pipes/uuid.validation.pipr';
 @Controller('posts')
 export class PostsController {
   constructor(private postService: PostsService) {}
 
   @Get('/:id')
-  getPost(@Param('id') id: string) {
-    console.log(`Received ID: ${id}`);
+  getPost(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.postService.findOne(id);
   }
-  
-  // @UseGuards(JwtAuthGuard)
-  // @Get('/posts')
-  // async getPosts(@Query('filter')filter?: string) {
-  //   let parsedFilter: { username?: string; tags?: string[] } = {};
 
-  //   if (filter) {
-  //     try {
-  //       parsedFilter = JSON.parse(filter);
-  //     } catch (error) {
-  //       throw new BadRequestException('Invalid filter format');
-  //     }
-  //   }
-
-  //   const { username, tags } = parsedFilter;
-  //   return this.postService.findAll(username, tags);
-  // }
   @UseGuards(JwtAuthGuard)
   @Get('/')
-  async getPosts(
-    @Query('username') username?: string,
-    @Query('tags') tags?: string, 
-  ) {
-    const tagsArray = tags?.split(',').map(tag => tag.trim());
+  async getPosts(@Query() query: FilterPostQueryDTO) {
 
-    return this.postService.findAll(username, tagsArray);
+    return this.postService.findAll(query);
   }
-  
- 
 
   @UseGuards(JwtAuthGuard)
   @Post('/create')
@@ -65,14 +45,15 @@ export class PostsController {
 
   @UseGuards(JwtAuthGuard, IsAuthorGuard)
   @Patch('/:id')
-  async edit(@Body() body: EditPostDTO, @Param('id') id: string) {
+  async edit(@Body() body: EditPostDTO, @Param('id',  new ParseUUIDPipe()) id: string) {
     console.log(`Received ID: ${id}`);
+    
     return this.postService.edit(id, body);
   }
 
   @UseGuards(JwtAuthGuard, IsAuthorGuard)
   @Delete('/:id')
-  deletePost(@Param('id') id: string) {
+  deletePost(@Param('id',  new ParseUUIDPipe()) id: string) {
 
     return this.postService.delete(id);
   }

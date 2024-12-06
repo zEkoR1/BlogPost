@@ -1,10 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { CreatePostDTO } from '../DTO/request.dto/CreatePostDTO';
-import { EditPostDTO } from '../DTO/request.dto/EditPostDTO';
+import { CreatePostDTO } from './create-post.dto';
+import { EditPostDTO } from './edit-post.dto';
 import { validate as isUUID } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { TagsService } from '../tags/tags.service';
 import { UsersService } from '../users/users.service';
+import { FilterPostQueryDTO } from './filter-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -14,10 +15,8 @@ export class PostsService {
     private tagService: TagsService,
   ) {}
 
-  async findOne(id: string) {
-    if (!isUUID(id)) {
-      throw new BadRequestException('Invalid UUID format');
-    }    const post = await this.prisma.post.findUnique({
+  async findOne(id: string) {  
+     const post = await this.prisma.post.findUnique({
       where: { id: id },
     });
     if (!post) throw new BadRequestException('There is no post found');
@@ -25,7 +24,9 @@ export class PostsService {
     return post;
   }
 
-  async findAll(username?: string, tags?: string[]) {
+  async findAll(query: FilterPostQueryDTO) {
+    const {username, tags} = query
+    const tagsArray = tags?.split(',').map(tag => tag.trim());
     let userID;
     if (username) {
       const user = await this.userService.findOne(username);
@@ -35,15 +36,16 @@ export class PostsService {
     }
     const where: any = {};
     if (userID) where.authorId = userID;
-    if (tags && tags.length > 0) {
+    if (tagsArray && tagsArray.length > 0) {
       where.tags = {
         some: {
           name: {
-            in: tags,
+            in: tagsArray,
           },
         },
       };
     }
+  
 
     return this.prisma.post.findMany({
       where,
@@ -114,30 +116,4 @@ export class PostsService {
     };
   }
 
-  async filterByTags(body: { tag: string }) {
-    const posts = await this.prisma.post.findMany({
-      select: {
-        title: true,
-        author: true,
-        createdAt: true,
-        tags: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      where: {
-        tags: {
-          some: {
-            name: body.tag,
-          },
-        },
-      },
-    });
-
-    if (!posts.length)
-      throw new BadRequestException('There is no any post with this Tag');
-
-    return posts;
-  }
 }

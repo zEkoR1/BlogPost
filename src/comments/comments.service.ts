@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CommentDTO } from '../DTO/request.dto/CommentDTO';
+import { CommentDTO } from './comment.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { PostsService } from '../posts/posts.service';

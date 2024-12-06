@@ -9,12 +9,12 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 // import { AppService } from './app.service';
-import { LocalAuthGuard } from './auth/Guards/local-auth.guard';
+import { LocalAuthGuard } from './auth/guards/local-auth.guard';
 import { AuthService } from './auth/auth.service';
-import { JwtAuthGuard } from './auth/Guards/jwt-auth.guard';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { UsersService } from './users/users.service';
-import { EditDTO } from './DTO/request.dto/EditDTO';
-import { CommentDTO } from './DTO/request.dto/CommentDTO';
+import { EditDTO } from './users/edit-user.dto';
+import { CommentDTO } from './comments/comment.dto';
 // import { CommentsService } from './comments/comments.service';
 @Controller()
 export class AppController {

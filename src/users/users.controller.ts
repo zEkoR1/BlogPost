@@ -1,8 +1,9 @@
-import { Controller, Get, Request, Body, UseGuards, Put } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/Guards/jwt-auth.guard';
-import { EditDTO } from '../DTO/request.dto/EditDTO';
-
+import { Controller, Get, Request, Body, UseGuards, Put, Patch, Param } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { EditDTO } from './edit-user.dto';
 import { UsersService } from './users.service';
+import { UuidValidationPipe } from '../pipes/uuid.validation.pipr';
+
 @Controller('users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
@@ -10,19 +11,21 @@ export class UsersController {
     @UseGuards(JwtAuthGuard)
     @Get('/')
     findAll(){
+
         return this.usersService.findAll();
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get('/unique')
-    findOne(@Body() body: {username: string}) {
-        return this.usersService.findOne(body.username);
+    @Get('/:id')
+    findOne(@Param ('id', UuidValidationPipe) userID: string) {
+
+        return this.usersService.findOne(userID);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Put('/edit')
-    async edit( @Request() req, @Body() body: EditDTO) {
-      const userId = req.user.id; 
-      return await this.usersService.update(userId, body)
+    @Patch('/:id')
+    edit( @Param('id', UuidValidationPipe) userID: string,  @Body() editDto: EditDTO) {
+
+      return  this.usersService.update(userID, editDto)
     }
 }

@@ -1,6 +1,5 @@
 import { Body, Controller, Patch, UseGuards, Request, Get } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/Guards/jwt-auth.guard';
-import { CreateTagDTO } from 'src/DTO/request.dto/CreateTagDTO';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { TagsService } from './tags.service';
 
 @Controller('tags')
@@ -9,7 +8,7 @@ export class TagsController {
 
     @Get('/')
     getTags(@Body () body: {tags: string[]}){
-        
+
         return this.tagService.find(body)
     }
 

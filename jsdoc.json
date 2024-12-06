@@ -1,0 +1,12 @@
+{
+    "source": {
+      "include": ["src"],
+      "includePattern": ".+\\.ts(doc|x)?$",
+      "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "opts": {
+      "destination": "./docs",
+      "recurse": true
+    }
+  }
+  

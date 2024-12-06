@@ -1,6 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { EditDTO } from '../DTO/request.dto/EditDTO';
+import { EditDTO } from './edit-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 @Injectable()
 export class UsersService {
@@ -11,14 +13,15 @@ export class UsersService {
     return this.prisma.user.findMany();
   }
 
-  async findOne(username: string) {
-    
+  async findOne(userID: string) {
+
     return this.prisma.user.findUnique({
-      where: { username },
+      where: { id: userID },
     });
   }
+
   async create(username: string, password: string) {
-    
+
     return this.prisma.user.create({
       data: {
         username: username,
@@ -26,20 +29,20 @@ export class UsersService {
       },
     });
   }
-  
-  async update(id: string, body: EditDTO) {
 
-    const updateData: {username?:string, password?:string} = {}
-    if (body.username) updateData.username = body.username;
-    if (body.password) updateData.password =  await bcrypt.hash(body.password, 10);
+  async update(id: string, editUserDto: EditDTO) {
+    const updateData: { username?: string; password?: string } = {};
 
-    return  this.prisma.user.update({
+    if (editUserDto.username) {
+      updateData.username = editUserDto.username;
+    }
+    if (editUserDto.password) {
+      updateData.password = await bcrypt.hash(editUserDto.password, 10);
+    }
+
+    return this.prisma.user.update({
       where: { id: id },
       data: updateData,
     });
-
   }
-
-
-
 }
